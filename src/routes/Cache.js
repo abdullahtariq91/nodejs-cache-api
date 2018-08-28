@@ -36,7 +36,7 @@ router.route('/:key')
     }).catch((err) => { common.fail(res, err.message); });
   })
   .put((req, res) => {
-    CacheService.updateCache(req.params.key).then((data) => {
+    CacheService.updateCache(req.params.key, req.body.value).then((data) => {
       common.success(res, data, 'Successfully updated cache by key');
     }).catch((err) => { common.fail(res, err.message); });
   })

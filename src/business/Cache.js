@@ -6,11 +6,14 @@ const ttl = require('../configurations/default').ttl;
 // private functions
 // ToDo: move private functions to separate folder
 const getExpirationDate = (date) => {
-  return new Date(date.getTime() + (ttl * 1000));
+  return new Date(date.getTime() + (5 * 1000));
 };
 
 const saveCache = (param) => {
   return new Promise((resolve, reject) => {
+    if (maximumRecords < 1) {
+      return reject({ message: 'No entries allowed' });
+    }
     let cacheObj = {};
     cacheObj.key = param.key;
     if (param.value) {
@@ -23,11 +26,8 @@ const saveCache = (param) => {
     cacheObj.expirationDate = getExpirationDate(new Date());
 
     cacheModel.countDocuments({}).then((total) => {
-      if (maximumRecords < 1) {
-        return reject({ message: 'No entries allowed' });
-      }
-
-      if (!total || total < maximumRecords) {
+      // check if maximum records have been reached
+      if (!total || total + 1 <= maximumRecords) {
         cacheModel.create(cacheObj).then((cache) => {
           if (!cache) {
             return reject({ message: 'Failed to create cache' });
@@ -37,12 +37,14 @@ const saveCache = (param) => {
           return reject({ message: err.message });
         });
       } else {
-        // find the oldest record, and overwrite it
+        // find record with oldest expiration date, and overwrite it
+        // assumption: newest expiration date is either new record
+        // or record being hit regularly
         cacheModel.findOneAndUpdate(
           {},
           cacheObj,
           { 
-            sort: { createdDate: 1 },
+            sort: { expirationDate: 1 },
             upsert: true,
             new: true
           }).then((cache) => {
@@ -93,6 +95,7 @@ const deleteAllCache = () => {
 
 const retrieveCache = (param) => {
   return new Promise((resolve, reject) => {
+    console.log(param);
     let expirationDate = getExpirationDate(new Date());
     cacheModel.findOneAndUpdate(
       { key: param, expirationDate: { $gt: new Date() } },
@@ -100,20 +103,48 @@ const retrieveCache = (param) => {
     ).then((data) => {
       if (!data) {
         console.log('Cache miss');
-        return resolve(saveCache({ key: param }));
+        // delete record if cache has expired
+        cacheModel.deleteOne({ key: param }).then((data) => {
+          if (!data) {
+            return reject({ message: 'Failed to delete cache by key' });
+          } else {
+            // create new record and return
+            return resolve(saveCache({ key: param }));
+          }
+        }).catch((err) => {
+          return reject({ message: err.message });
+        });
       } else {
         console.log('Cache hit');
         return resolve(data);
       }
     }).catch((err) => {
+      console.log(err);
       return reject({ message: err.message });
     });
   });
 };
 
-const updateCache = (param) => {
+const updateCache = (key, value) => {
   return new Promise((resolve, reject) => {
-    return resolve({ something: 'param' });
+    let expirationDate = getExpirationDate(new Date());
+    cacheModel.findOneAndUpdate(
+      { key,
+        expirationDate: { $gt: new Date() }
+      },
+      {
+        value,
+        expirationDate,
+        updatedDate: new Date() 
+      },
+      { 
+        new: true
+      }).then((cache) => {
+      if (!cache) {
+        return reject({ message: 'Failed to update cache' });
+      }
+      return resolve(cache);
+    });
   });
 };
 
