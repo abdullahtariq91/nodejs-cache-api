@@ -63,6 +63,7 @@ const saveCache = (param) => {
 // public functions
 const retrieveAllCache = () => {
   return new Promise((resolve, reject) => {
+    // retrieves all cache - expired or not
     cacheModel.find({}).then((data) => {
       if (!data) {
         return reject({ message: 'Failed to find cache' });
@@ -81,6 +82,7 @@ const createCache = (param) => {
 
 const deleteAllCache = () => {
   return new Promise((resolve, reject) => {
+    // deletes all cache
     cacheModel.deleteMany({}).then((data) => {
       if (!data) {
         return reject({ message: 'Failed to delete cache' });
@@ -95,8 +97,8 @@ const deleteAllCache = () => {
 
 const retrieveCache = (param) => {
   return new Promise((resolve, reject) => {
-    console.log(param);
     let expirationDate = getExpirationDate(new Date());
+    // retrieves and updates cache if it has not expired
     cacheModel.findOneAndUpdate(
       { key: param, expirationDate: { $gt: new Date() } },
       { expirationDate }
@@ -108,7 +110,7 @@ const retrieveCache = (param) => {
           if (!data) {
             return reject({ message: 'Failed to delete cache by key' });
           } else {
-            // create new record and return
+            // create and returns new cache
             return resolve(saveCache({ key: param }));
           }
         }).catch((err) => {
@@ -119,7 +121,6 @@ const retrieveCache = (param) => {
         return resolve(data);
       }
     }).catch((err) => {
-      console.log(err);
       return reject({ message: err.message });
     });
   });
@@ -128,6 +129,8 @@ const retrieveCache = (param) => {
 const updateCache = (key, value) => {
   return new Promise((resolve, reject) => {
     let expirationDate = getExpirationDate(new Date());
+    // update cache only if it has NOT expired
+    // assumption: 'If the TTL is exceeded, the cached data will not be used'
     cacheModel.findOneAndUpdate(
       { key,
         expirationDate: { $gt: new Date() }

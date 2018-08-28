@@ -30,7 +30,7 @@ const success = (res, data, message) => {
 };
 
 const fail = (res, message) => {
-  return res.status(200).send({
+  return res.status(400).send({
     status : 400,
     message : message || 'Failed'
   });

@@ -20,15 +20,21 @@
   },
   "homepage": "https://github.com/abdullahtariq91/nodejs-cache-api#readme",
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "test": "mocha"
   },
   "dependencies": {
     "bluebird": "~3.5.0",
     "body-parser": "^1.18.3",
+    "chai-http": "^4.0.0",
     "debug": "~2.6.9",
     "express": "~4.16.0",
     "mongoose": "^5.1.5",
     "morgan": "~1.9.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0"
   },
   "engines": {
     "node": "=8.11.3"
