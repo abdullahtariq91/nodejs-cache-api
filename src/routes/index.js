@@ -1,4 +1,4 @@
-const common = require('../libs/common.js');
+const common = require('../libs/common');
 
 // add each route for application here
 module.exports = function (app) {

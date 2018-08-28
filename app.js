@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const logger = require('morgan');
 const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 
 // Initialize the server
 global.ROOTURL = path.resolve(__dirname);
@@ -12,6 +13,8 @@ mongoose.Promise = require('bluebird');
 mongoose.connect(require('./src/configurations/default').database.development, { useNewUrlParser: true });
 
 app.use(logger('dev'));
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: false, parameterLimit: 1000000 }));
 
 require('./src/routes/index')(app);
 

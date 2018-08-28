@@ -5,35 +5,44 @@ const CacheService = require(common.routing('src/business', 'Cache.js'));
 // add middleware for each call here
 router.route('/')
   .get((req, res) => {
-    CacheService.retrieveKeys().then((data) => {
-      common.success(res, data, 'Successfully retrieved keys');
-    }).catch((err) => { common.fail(res, err.message); })
+    CacheService.retrieveAllCache().then((data) => {
+      common.success(res, data, 'Successfully retrieved cache');
+    }).catch((err) => { common.fail(res, err.message); });
   })
   .post((req, res) => {
-    CacheService.createKey(req.body).then((data) => {
-      common.success(res, data, 'Successfully created key');
-    }).catch((err) => { common.fail(res, err.message); })
+    if (req.body.key !== undefined) {
+      CacheService.createCache(req.body).then((data) => {
+        common.success(res, data, 'Successfully created cache');
+      }).catch((err) => { common.fail(res, err.message); });
+    } else {
+      common.fail(res, 'Missing body in request')
+    }
   })
   .delete((req, res) => {
-    CacheService.deleteKeys().then((data) => {
-      common.success(res, data, 'Successfully deleted keys');
-    }).catch((err) => { common.fail(res, err.message); })
+    CacheService.deleteAllCache().then((data) => {
+      common.success(res, data, 'Successfully deleted cache');
+    }).catch((err) => { common.fail(res, err.message); });
   });
 
 router.route('/:key')
+  .all((req, res, next) => {
+    if (req.params.key === undefined)
+      common.fail(res, 'Missing key in request');
+    else next();
+  })
   .get((req, res) => {
-    CacheService.retrieveKey(req.params.key).then((data) => {
-      common.success(res, data, 'Successfully retrieved key');
+    CacheService.retrieveCache(req.params.key).then((data) => {
+      common.success(res, data, 'Successfully retrieved cache key');
     }).catch((err) => { common.fail(res, err.message); });
   })
   .put((req, res) => {
-    CacheService.updateKey(req.params.key).then((data) => {
-      common.success(res, data, 'Successfully updated key');
+    CacheService.updateCache(req.params.key).then((data) => {
+      common.success(res, data, 'Successfully updated cache by key');
     }).catch((err) => { common.fail(res, err.message); });
   })
   .delete((req, res) => {
-    CacheService.deleteKey(req.params.key).then((data) => {
-      common.success(res, data, 'Successfully deleted key');
+    CacheService.deleteCache(req.params.key).then((data) => {
+      common.success(res, data, 'Successfully deleted cache by key');
     }).catch((err) => { common.fail(res, err.message); });
   })
 
